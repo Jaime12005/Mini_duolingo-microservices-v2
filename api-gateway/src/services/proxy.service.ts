@@ -16,23 +16,27 @@ export function createServiceProxy(target: string, name = 'service', opts: Parti
       try {
         console.log(`[proxy] -> ${name} : ${req.method} ${req.originalUrl} -> ${target}${req.originalUrl}`);
 
+      // 🔐 Forward user from JWT
+        if (req.user?.userId) {
+          proxyReq.setHeader('x-user-id', req.user.userId);
+        }
+        
         // 🔥 FIX CLAVE: reenviar body si existe
         const contentType = req.headers['content-type'] || '';
 
         // 🔥 SOLO aplicar para JSON
-        if (
-          req.body &&
-          Object.keys(req.body).length &&
-          contentType.includes('application/json')
-        ) {
-          const bodyData = JSON.stringify(req.body);
-
-          proxyReq.setHeader('Content-Type', 'application/json');
-          proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
-
-          proxyReq.write(bodyData);
+        if (req.body && Object.keys(req.body).length) {
+            const bodyData = JSON.stringify(req.body);
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+            proxyReq.write(bodyData);
+        }
+        
+        if (req.user) {
+          proxyReq.setHeader('x-user-id', req.user.userId);
         }
 
+        
       } catch (e) {
           console.error('ProxyReq error:', e);
         }

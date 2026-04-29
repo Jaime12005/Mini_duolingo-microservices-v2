@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as contentService from '../services/content.service';
+import { createExerciseSchema } from '../validators/exercise.validator';
 
 export async function createUnit(req: Request, res: Response, next: NextFunction) {
   try {
@@ -34,29 +35,114 @@ export async function getLessonsByUnit(req: Request, res: Response, next: NextFu
   } catch (err) { next(err); }
 }
 
-export async function createExercise(req: Request, res: Response, next: NextFunction) {
+export const createExercise = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { lesson_id, prompt, correct_answer, type } = req.body;
-    if (!lesson_id || !prompt || !correct_answer || !type) return res.status(400).json({ success: false, message: 'lesson_id, prompt, correct_answer and type required', data: null, error: 'Validation' });
-    const exercise = await contentService.createExercise({ lesson_id, prompt, correct_answer, type });
-    res.status(201).json({ success: true, message: 'Exercise created', data: exercise, error: null });
-  } catch (err) { next(err); }
-}
+    const parsed = createExerciseSchema.parse(req.body);
 
-export async function getExercisesByLesson(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { lessonId } = req.params;
-    const exercises = await contentService.getExercisesByLesson(lessonId);
-    res.json({ success: true, message: 'OK', data: exercises, error: null });
-  } catch (err) { next(err); }
-}
+    const data = await contentService.createExercise(parsed);
+
+    res.status(201).json({
+      success: true,
+      message: 'Exercise created',
+      data,
+      error: null
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 export async function validateExercise(req: Request, res: Response, next: NextFunction) {
   try {
     const { exerciseId } = req.params;
     const { answer } = req.body;
     if (typeof answer === 'undefined') return res.status(400).json({ success: false, message: 'answer is required', data: null, error: 'Validation' });
-    const result = await contentService.validateExerciseAnswer(exerciseId, answer);
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+        data: null,
+        error: 'Missing user'
+      });
+    }
+
+    const result = await contentService.validateExerciseAnswer(
+      exerciseId,
+      answer,
+      userId
+    );
     res.json({ success: true, message: 'OK', data: result, error: null });
   } catch (err) { next(err); }
 }
+
+export async function completeLesson(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+        data: null,
+        error: 'Missing user'
+      });
+    }
+
+    const result = await contentService.completeLesson(userId);
+
+    res.json({
+      success: true,
+      message: 'Lesson completed',
+      data: result
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export const getExercises = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await contentService.getExercises();
+
+    res.json({
+      success: true,
+      message: 'Exercises retrieved',
+      data,
+      error: null
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getExerciseById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await contentService.getExerciseById(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Exercise retrieved',
+      data,
+      error: null
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getExercisesByLesson = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await contentService.getExercisesByLesson(req.params.lessonId);
+
+    res.json({
+      success: true,
+      message: 'Exercises by lesson',
+      data,
+      error: null
+    });
+  } catch (err) {
+    next(err);
+  }
+};

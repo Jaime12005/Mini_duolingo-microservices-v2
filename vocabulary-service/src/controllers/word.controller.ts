@@ -60,3 +60,23 @@ export async function createWord(req: Request, res: Response, next: NextFunction
     next(error);
   }
 }
+
+export async function searchWord(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { word } = req.query;
+
+    if (!word || typeof word !== 'string') {
+      throw new AppError('Query param "word" is required', 400);
+    }
+
+    const data = await wordService.searchWord(word);
+
+    res.json({
+      success: true,
+      message: 'Word found',
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
+}

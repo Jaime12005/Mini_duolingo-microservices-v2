@@ -1,6 +1,6 @@
 export interface Streak {
   id?: number;
-  userId: number;
+  userId: string;
   currentStreak: number;
   lastActivityDate: string; // YYYY-MM-DD
 }

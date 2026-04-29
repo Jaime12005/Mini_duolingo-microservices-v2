@@ -10,10 +10,13 @@ router.get('/units', controller.getUnits);
 // Lessons
 router.post('/lessons', controller.createLesson);
 router.get('/units/:unitId/lessons', controller.getLessonsByUnit);
+router.get('/lessons/:lessonId/exercises', controller.getExercisesByLesson);
 
 // Exercises
 router.post('/exercises', controller.createExercise);
-router.get('/lessons/:lessonId/exercises', controller.getExercisesByLesson);
 router.post('/exercises/:exerciseId/validate', controller.validateExercise);
+router.post('/lessons/complete', controller.completeLesson);
+router.get('/exercises', controller.getExercises);
+router.get('/exercises/:id', controller.getExerciseById);
 
 export default router;

@@ -22,7 +22,7 @@ function formatDateYMD(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export async function addXp(userId: number, points: number) {
+export async function addXp(userId: string, points: number) {
   try {
     const conn = pool;
     await conn.execute(`INSERT INTO ${PointsTable} (userId, points, createdAt) VALUES (?, ?, NOW())`, [userId, points]);
@@ -34,7 +34,7 @@ export async function addXp(userId: number, points: number) {
   }
 }
 
-export async function getXp(userId: number) {
+export async function getXp(userId: string) {
   try {
     const conn = pool;
     const [rows] = await conn.execute<any[]>(`SELECT SUM(points) as total FROM ${PointsTable} WHERE userId = ?`, [userId]);
@@ -45,7 +45,7 @@ export async function getXp(userId: number) {
   }
 }
 
-export async function updateStreak(userId: number) {
+export async function updateStreak(userId: string) {
   try {
     const conn = pool;
     const [rows] = await conn.execute<any[]>(`SELECT * FROM ${StreaksTable} WHERE userId = ?`, [userId]);
@@ -97,7 +97,7 @@ export async function updateStreak(userId: number) {
   }
 }
 
-export async function getStreak(userId: number) {
+export async function getStreak(userId: string) {
   try {
     const conn = pool;
     const [rows] = await conn.execute<any[]>(`SELECT * FROM ${StreaksTable} WHERE userId = ?`, [userId]);
@@ -111,7 +111,7 @@ export async function getStreak(userId: number) {
   }
 }
 
-export async function unlockAchievement(userId: number, achievementType: string) {
+export async function unlockAchievement(userId: string, achievementType: string) {
   try {
     const conn = pool;
     const [rows] = await conn.execute<any[]>(`SELECT * FROM ${AchievementsTable} WHERE userId = ? AND achievementType = ?`, [userId, achievementType]);
@@ -125,7 +125,7 @@ export async function unlockAchievement(userId: number, achievementType: string)
   }
 }
 
-export async function getAchievements(userId: number) {
+export async function getAchievements(userId: string) {
   try {
     const conn = pool;
     const [rows] = await conn.execute<any[]>(`SELECT * FROM ${AchievementsTable} WHERE userId = ? ORDER BY unlockedAt DESC`, [userId]);
@@ -135,7 +135,7 @@ export async function getAchievements(userId: number) {
   }
 }
 
-export async function processUserAction(userId: number, actionType: string) {
+export async function processUserAction(userId: string, actionType: string) {
   try {
     // 🔒 Validar actionType
     if (!(actionType in ACTION_XP)) {
@@ -153,7 +153,7 @@ export async function processUserAction(userId: number, actionType: string) {
 
     // 🏆 3. Evaluar logros
     const unlocked: Array<{
-      userId: number;
+      userId: string;
       achievementType: string;
       unlockedAt: string;
     }> = [];

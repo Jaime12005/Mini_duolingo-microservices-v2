@@ -105,7 +105,7 @@ function generateDetailedFeedback(expected: string, transcribed: string, score: 
 }
 
 export async function evaluatePronunciation(input: {
-  userId: number;
+  userId: string;
   word: string;
   expectedText: string;
   transcribedText: string;

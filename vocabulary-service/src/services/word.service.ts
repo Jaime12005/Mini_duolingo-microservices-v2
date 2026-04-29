@@ -112,8 +112,46 @@ export async function createWord(data: { word: string; language?: string | null;
   }
 }
 
+export async function searchWord(word: string): Promise<WordDTO> {
+  try {
+    const w = await wordRepo.findWordByText(word);
+
+    if (!w) throw new AppError('Word not found', 404);
+
+    const meaningsRows = await meaningRepo.getMeaningsByWordId(w.id);
+
+    const meanings: MeaningDTO[] = await Promise.all(
+      meaningsRows.map(async (m) => {
+        const examplesRows = await exampleRepo.getExamplesByMeaningId(m.id);
+
+        return {
+          id: m.id,
+          meaning: m.meaning,
+          examples: examplesRows.map((ex) => ({
+            id: ex.id,
+            example_text: ex.example_text
+          }))
+        };
+      })
+    );
+
+    return {
+      id: w.id,
+      word: w.word,
+      language: w.language || null,
+      ipa: w.ipa || null,
+      audio_url: w.audio_url || null,
+      meanings
+    };
+  } catch (err: any) {
+    console.error('searchWord error', err);
+    throw err instanceof AppError ? err : new AppError('Failed to search word', 500);
+  }
+}
+
 export default {
   getAllWords,
   getWordById,
-  createWord
+  createWord,
+  searchWord
 };

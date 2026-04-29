@@ -1,6 +1,6 @@
 export interface Evaluation {
   id?: number;
-  userId: number;
+  userId: string;
   word: string;
   expectedText: string;
   transcribedText: string;

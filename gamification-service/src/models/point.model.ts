@@ -1,6 +1,6 @@
 export interface Point {
   id?: number;
-  userId: number;
+  userId: string;
   points: number;
   createdAt?: string;
 }

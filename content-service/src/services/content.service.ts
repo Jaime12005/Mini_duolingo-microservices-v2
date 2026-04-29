@@ -4,6 +4,9 @@ import { Unit, UnitTable } from '../models/unit.model';
 import { Lesson, LessonTable } from '../models/lesson.model';
 import { Exercise, ExerciseTable } from '../models/exercise.model';
 import * as vocabularyClient from '../clients/vocabulary.client';
+import { gamificationClient } from '../utils/httpClient';
+import { createError } from '../utils/error.util';
+
 
 export async function createUnit(data: { title: string; description?: string }) {
   const id = uuidv4();
@@ -69,12 +72,8 @@ export async function createExercise(data: {
   return { id, ...data } as Exercise;
 }
 
-export async function getExercisesByLesson(lessonId: string): Promise<Exercise[]> {
-  const [rows] = await pool.execute<any[]>(`SELECT id, lesson_id, prompt, correct_answer, type, created_at FROM ${ExerciseTable} WHERE lesson_id = ? ORDER BY created_at DESC`, [lessonId]);
-  return rows as Exercise[];
-}
 
-export async function validateExerciseAnswer(exerciseId: string, answer: string): Promise<{ correct: boolean; expected?: string }> {
+export async function validateExerciseAnswer(exerciseId: string, answer: string, userId: string): Promise<{ correct: boolean; expected?: string }> {
   const [rows] = await pool.execute<any[]>(`SELECT correct_answer FROM ${ExerciseTable} WHERE id = ? LIMIT 1`, [exerciseId]);
   const row = rows[0];
   if (!row) {
@@ -94,7 +93,7 @@ export async function validateExerciseAnswer(exerciseId: string, answer: string)
 // 🔥 NUEVA LÓGICA: VALIDACIÓN CON VOCABULARY
   if (!correct) {
     try {
-      const wordData = await vocabularyClient.findWord(expected);
+      const wordData = await vocabularyClient.searchWord(expected);
 
       if (wordData) {
         const meanings = wordData.meanings || [];
@@ -112,5 +111,57 @@ export async function validateExerciseAnswer(exerciseId: string, answer: string)
   }
 }
 
+if (correct) {
+  try {
+    await gamificationClient.post('/api/v1/gamification/action', {
+      userId, // ⚠️ luego lo sacamos del JWT
+      actionType: 'EXERCISE_CORRECT'
+    });
+  } catch (error: any) {
+    console.error('Gamification service error:', error?.message);
+  }
+}
+
 return { correct, expected };
 }
+
+export async function completeLesson(userId: string) {
+  try {
+    await gamificationClient.post('/api/v1/gamification/action', {
+      userId,
+      actionType: 'LESSON_COMPLETED'
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Gamification error:', error);
+    throw error;
+  }
+}
+
+export const getExercises = async () => {
+  const [rows] = await pool.query('SELECT * FROM exercises');
+  return rows;
+};
+
+export const getExerciseById = async (id: string) => {
+  const [rows]: any = await pool.query(
+    'SELECT * FROM exercises WHERE id = ?',
+    [id]
+  );
+
+  if (!rows.length) {
+  throw createError('Exercise not found', 404);
+  }
+
+  return rows[0];
+};
+
+export const getExercisesByLesson = async (lessonId: string) => {
+  const [rows]: any = await pool.query(
+    'SELECT * FROM exercises WHERE lesson_id = ?',
+    [lessonId]
+  );
+
+  return rows;
+};

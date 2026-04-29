@@ -80,8 +80,18 @@ export async function createWord(data: {
   }
 }
 
+export async function findWordByText(word: string) {
+  const [rows] = await pool.query<any[]>(
+    `SELECT * FROM words WHERE LOWER(word) = LOWER(?) LIMIT 1`,
+    [word]
+  );
+
+  return rows[0] || null;
+}
+
 export default {
   getAllWords,
   getWordById,
-  createWord
+  createWord,
+  findWordByText
 };

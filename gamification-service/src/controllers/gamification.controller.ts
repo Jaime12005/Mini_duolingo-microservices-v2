@@ -5,7 +5,7 @@ import AppError from '../utils/AppError';
 export async function addXp(req: Request, res: Response, next: NextFunction) {
   try {
     const { userId, points } = req.body;
-    if (typeof userId !== 'number' || typeof points !== 'number') return next(new AppError('Invalid body', 400));
+    if (typeof userId !== 'string' || typeof points !== 'number') return next(new AppError('Invalid body', 400));
     const result = await gamificationService.addXp(userId, points);
     return res.status(201).json({ success: true, message: 'XP added', data: result });
   } catch (err) {
@@ -15,7 +15,7 @@ export async function addXp(req: Request, res: Response, next: NextFunction) {
 
 export async function getXp(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId = Number(req.params.userId);
+    const userId = String(req.params.userId || '');
     if (!userId) return next(new AppError('Invalid userId', 400));
     const result = await gamificationService.getXp(userId);
     return res.json({ success: true, message: 'Total XP', data: result });
@@ -27,7 +27,7 @@ export async function getXp(req: Request, res: Response, next: NextFunction) {
 export async function updateStreak(req: Request, res: Response, next: NextFunction) {
   try {
     const { userId } = req.body;
-    if (typeof userId !== 'number') return next(new AppError('Invalid body', 400));
+    if (typeof userId !== 'string') return next(new AppError('Invalid body', 400));
     const result = await gamificationService.updateStreak(userId);
     return res.json({ success: true, message: 'Streak updated', data: result });
   } catch (err) {
@@ -37,7 +37,7 @@ export async function updateStreak(req: Request, res: Response, next: NextFuncti
 
 export async function getStreak(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId = Number(req.params.userId);
+    const userId = String(req.params.userId || '');
     if (!userId) return next(new AppError('Invalid userId', 400));
     const result = await gamificationService.getStreak(userId);
     return res.json({ success: true, message: 'Current streak', data: result });
@@ -49,7 +49,7 @@ export async function getStreak(req: Request, res: Response, next: NextFunction)
 export async function unlockAchievement(req: Request, res: Response, next: NextFunction) {
   try {
     const { userId, achievementType } = req.body;
-    if (typeof userId !== 'number' || !achievementType) return next(new AppError('Invalid body', 400));
+    if (typeof userId !== 'string' || !achievementType) return next(new AppError('Invalid body', 400));
     const result = await gamificationService.unlockAchievement(userId, achievementType);
     return res.status(201).json({ success: true, message: 'Achievement unlocked', data: result });
   } catch (err) {
@@ -59,7 +59,7 @@ export async function unlockAchievement(req: Request, res: Response, next: NextF
 
 export async function getAchievements(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId = Number(req.params.userId);
+    const userId = String(req.params.userId || '');
     if (!userId) return next(new AppError('Invalid userId', 400));
     const result = await gamificationService.getAchievements(userId);
     return res.json({ success: true, message: 'Achievements', data: result });
@@ -72,7 +72,7 @@ export async function processAction(req: Request, res: Response, next: NextFunct
   try {
     const { userId, actionType } = req.body;
 
-    if (typeof userId !== 'number' || typeof actionType !== 'string') {
+    if (typeof userId !== 'string' || typeof actionType !== 'string') {
       return next(new AppError('Invalid body', 400));
     }
 

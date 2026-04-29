@@ -1,6 +1,6 @@
 export interface Achievement {
   id?: number;
-  userId: number;
+  userId: string;
   achievementType: string;
   unlockedAt?: string;
 }
