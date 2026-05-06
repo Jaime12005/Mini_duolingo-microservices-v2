@@ -3,6 +3,23 @@
 
 ---
 
+Base de datsos MySQL
+```sql
+CREATE DATABASE pronunciation_service_db;
+USE pronunciation_service_db;
+
+CREATE TABLE evaluations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  userId VARCHAR(36) NOT NULL,
+  word VARCHAR(255) NOT NULL,
+  expectedText TEXT NOT NULL,
+  transcribedText TEXT NOT NULL,
+  score INT NOT NULL,
+  feedback TEXT,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 ## 🧩 1. OBJETIVO DEL TRABAJO
 
 Implementar y conectar correctamente los microservicios:

@@ -53,3 +53,10 @@ export async function updateUser(userId: string, fields: Partial<{username:strin
 export async function deleteUser(userId: string){
   await pool.execute<ResultSetHeader>(`DELETE FROM users WHERE user_id = ?`, [userId]);
 }
+
+export async function updatePassword(userId: string, password_hash: string) {
+  await pool.execute<ResultSetHeader>(
+    `UPDATE users SET password_hash = ? WHERE user_id = ?`,
+    [password_hash, userId]
+  );
+}

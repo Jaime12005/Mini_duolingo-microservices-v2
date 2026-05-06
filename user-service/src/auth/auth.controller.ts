@@ -87,3 +87,20 @@ export async function logout(req: Request, res: Response, next: NextFunction) {
     next(err);
   }
 }
+
+export async function resetPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const adminKey = req.headers['x-admin-key'];
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return res.status(401).json({ success: false, message: 'Unauthorized', data: null, error: 'Invalid admin key' });
+    }
+
+    const { email, newPassword } = req.body;
+
+    const result = await authService.resetPassword(email, newPassword);
+
+    res.json({ success: true, message: 'Password reset', data: result, error: null });
+  } catch (err) {
+    next(err);
+  }
+}

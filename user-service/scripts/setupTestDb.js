@@ -6,7 +6,7 @@ async function run() {
   const host = process.env.DB_HOST || '127.0.0.1';
   const port = process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306;
   const user = process.env.DB_USER || 'root';
-  const password = process.env.DB_PASSWORD || '';
+  const password = process.env.DB_PASSWORD || 'root';
   const migrationPath = path.resolve(__dirname, '..', 'migrations', 'create_tables.sql');
 
   const sql = fs.readFileSync(migrationPath, 'utf8');

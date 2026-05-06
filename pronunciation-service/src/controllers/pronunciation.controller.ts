@@ -12,59 +12,87 @@ const openai = new OpenAI({
 });
 
 export const evaluateAudio = async (req: any, res: any, next: any) => {
+  let transcribedText = '';
+
   try {
     const userId = req.headers['x-user-id'] as string;
-    const token = req.headers.authorization?.split(' ')[1];
 
     if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return next(new AppError('Unauthorized', 401));
     }
 
     const { word, expectedText } = req.body;
 
-    if (!req.file) {
-      return res.status(400).json({ message: 'Audio file is required' });
+    if (!word || !expectedText) {
+      return next(new AppError('word and expectedText are required', 400));
     }
 
-    let transcribedText = '';
+    if (!req.file) {
+      return next(new AppError('Audio file is required', 400));
+    }
+
+    const audioPath = req.file.path;
 
     try {
       const transcription = await openai.audio.transcriptions.create({
         file: fs.createReadStream(req.file.path),
-        model: 'whisper-1',
+        model: 'whisper-1'
       });
 
       transcribedText = transcription.text;
-
     } catch (error: any) {
-      console.warn('⚠️ Whisper fallback:', error.message);
+      console.error('Whisper error, using fallback:', error?.message || error);
 
-      const fakeTranscriptions = ["hello", "helo", "hallo", "yellow"];
-      transcribedText = fakeTranscriptions[Math.floor(Math.random() * fakeTranscriptions.length)];
+      const fallbackPool = [
+        expectedText,
+        word,
+        'hello',
+        'hola'
+      ];
+
+      transcribedText = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
     }
 
     const result = await pronunciationService.evaluatePronunciation({
       userId,
       word,
       expectedText,
-      transcribedText
+      transcribedText,
+      audioPath
     });
 
-    // 🎮 gamification
+    const token = req.headers.authorization?.split(' ')[1];
+
     if (token) {
       await sendUserAction(token, userId, 'PRONUNCIATION_PRACTICE');
     }
 
-    fs.unlinkSync(req.file.path);
-
     res.json({
       success: true,
-      message: 'Audio evaluated',
-      data: result,
+      message: 'Pronunciation evaluated',
+      data: {
+        word,
+        expectedText,
+        transcribedText,
+        score: result.score,
+        isCorrect: result.score >= 70,
+        feedback: result.feedback
+      }
     });
 
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error(error);
+
+    if (error?.status === 429) {
+      return next(new AppError('Speech service unavailable', 503));
+    }
+
+    return next(new AppError('Error evaluating pronunciation', 500));
+
+  } finally {
+    //if (req.file) {
+    //  fs.unlink(req.file.path, () => {});
+   //}
   }
 };
 

@@ -12,16 +12,13 @@ export async function sendUserAction(
   try {
     const response = await axios.post(
       `${GAMIFICATION_URL}/action`,
-      {
-        userId,
-        actionType
-      },
+      { actionType },
       {
         headers: {
           Authorization: `Bearer ${token}`
         }
       }
-    );
+   );
 
     return response.data;
   } catch (error: any) {

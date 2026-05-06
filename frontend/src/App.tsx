@@ -4,9 +4,10 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Profile from './pages/Profile'
 import { AuthProvider, useAuth } from './state/auth'
+import Content from './pages/Content'
 
 function Header() {
-  const { user, logout } = useAuth()
+  const { user, accessToken, logout } = useAuth()
   const nav = useNavigate()
   return (
     <header className="duo-header">
@@ -16,10 +17,11 @@ function Header() {
       </div>
       <nav>
         <Link to="/">Home</Link>
-        {!user && <Link to="/login">Login</Link>}
-        {!user && <Link to="/register">Register</Link>}
-        {user && <Link to="/profile">Profile</Link>}
-        {user && <button onClick={() => { logout(); nav('/login') }}>Logout</button>}
+        {!accessToken && <Link to="/login">Login</Link>}
+        {!accessToken && <Link to="/register">Register</Link>}
+        {accessToken && <Link to="/profile">Profile</Link>}
+        {accessToken && <Link to="/content">Content</Link>}
+        {accessToken && <button onClick={() => { logout(); nav('/login') }}>Logout</button>}
       </nav>
     </header>
   )
@@ -36,6 +38,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/content" element={<Content />} />
           </Routes>
         </main>
       </div>

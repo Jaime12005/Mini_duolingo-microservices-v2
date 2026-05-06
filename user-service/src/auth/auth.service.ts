@@ -139,3 +139,16 @@ export async function logout(refreshToken: string) {
 export async function logoutAll(userId: string) {
   await refreshRepo.revokeAllUserTokens(userId);
 }
+
+export async function resetPassword(email: string, newPassword: string) {
+  const normalized = email.trim().toLowerCase();
+
+  const user = await userRepo.findByEmail(normalized);
+  if (!user) throw { status: 404, message: 'User not found' };
+
+  const password_hash = await hashPassword(newPassword);
+
+  await userRepo.updatePassword(user.user_id, password_hash);
+
+  return { userId: user.user_id };
+}

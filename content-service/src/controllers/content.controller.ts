@@ -3,6 +3,7 @@ import * as contentService from '../services/content.service';
 import { createExerciseSchema } from '../validators/exercise.validator';
 import { updateLessonProgress } from '../services/progress.service';
 import pool from '../database/connection';
+import * as livesService from '../services/lives.service';
 
 export async function createUnit(req: Request, res: Response, next: NextFunction) {
   try {
@@ -70,12 +71,22 @@ export async function validateExercise(req: Request, res: Response, next: NextFu
       });
     }
 
+    const token = req.headers.authorization?.split(' ')[1];
+
     const result = await contentService.validateExerciseAnswer(
       exerciseId,
       answer,
-      userId
+      userId,
+       token
     );
-    res.json({ success: true, message: 'OK', data: result, error: null });
+
+    res.json({
+      success: true,
+      message: 'OK',
+      data: result,
+      error: null
+    });
+
   } catch (err) { next(err); }
 }
 
@@ -136,6 +147,30 @@ export const getExerciseById = async (req: Request, res: Response, next: NextFun
 
 export const getExercisesByLesson = async (req: Request, res: Response, next: NextFunction) => {
   try {
+
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+        data: null,
+        error: 'Missing user'
+      });
+    }
+
+
+    const locked = await contentService.isLessonLocked(userId, req.params.lessonId);
+
+    if (locked) {
+      return res.status(403).json({
+      success: false,
+      message: 'Lesson locked',
+      data: { locked: true },
+      error: 'Lesson is locked'
+    });
+    }
+    
     const data = await contentService.getExercisesByLesson(req.params.lessonId);
 
     res.json({
@@ -149,16 +184,91 @@ export const getExercisesByLesson = async (req: Request, res: Response, next: Ne
   }
 };
 
-export async function getUserProgress(req: any, res: any) {
-  const userId = req.user?.userId;
+export async function getUserProgress(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.userId;
 
-  const [rows]: any = await pool.execute(
-    `SELECT * FROM lesson_progress WHERE user_id = ?`,
-    [userId]
-  );
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+        data: null,
+        error: 'Missing user'
+      });
+    }
 
-  res.json({
-    success: true,
-    data: rows
-  });
+    const [rows]: any = await pool.execute(
+      `SELECT * FROM lesson_progress WHERE user_id = ?`,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getUnitsWithProgress(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+        data: null,
+        error: 'Missing user'
+      });
+    }
+
+    const data = await contentService.getUnitsWithProgress(userId);
+
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getLessonsByUnitWithLock(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { unitId } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+        data: null,
+        error: 'Missing user'
+      });
+    }
+
+    const lessons = await contentService.getLessonsByUnitWithLock(userId, unitId);
+
+    res.json({ success: true, message: 'OK', data: lessons, error: null });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getLessonLives(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.userId;
+    const { lessonId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized', data: null, error: 'Missing user' });
+    }
+
+    const data = await livesService.getLivesStatus(userId, lessonId);
+    res.json({ success: true, message: 'OK', data, error: null });
+  } catch (err) {
+    next(err);
+  }
 }
