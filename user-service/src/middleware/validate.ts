@@ -9,7 +9,8 @@ export const validate = (schema: ZodSchema) =>
       return res.status(400).json({
         success: false,
         message: 'Validation error',
-        errors: result.error.flatten()
+        data: null,
+        error: result.error.flatten()
       });
     }
 

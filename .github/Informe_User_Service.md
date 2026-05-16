@@ -5,7 +5,7 @@
 ### 🗄️ Base de datos en MySQL
 
 ```sql
-CREATE DATABASE user_service_db;
+create database user_service_db;
 USE user_service_db;
 
 CREATE TABLE users (
@@ -13,7 +13,7 @@ CREATE TABLE users (
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
+    is_active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -26,13 +26,21 @@ CREATE TABLE user_profiles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+ALTER TABLE user_profiles
+ADD CONSTRAINT fk_profiles_user 
+FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
+
 CREATE TABLE user_streaks (
     user_id VARCHAR(36) PRIMARY KEY,
     current_streak INT DEFAULT 0,
     longest_streak INT DEFAULT 0,
     last_activity_date DATE,
-    streak_freeze BOOLEAN DEFAULT FALSE
+    streak_freeze TINYINT(1) DEFAULT 0
 );
+
+ALTER TABLE user_streaks
+ADD CONSTRAINT fk_streaks_user 
+FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
 
 CREATE TABLE refresh_tokens (
   token_id VARCHAR(36) PRIMARY KEY,
@@ -40,10 +48,11 @@ CREATE TABLE refresh_tokens (
   token VARCHAR(500) NOT NULL,
   expires_at DATETIME NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  is_revoked BOOLEAN DEFAULT FALSE,
+  is_revoked TINYINT(1) DEFAULT 0,
 
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
 
 Se está desarrollando un sistema tipo Duolingo basado en una arquitectura de microservicios, donde cada servicio es independiente y cumple una responsabilidad específica.
 

@@ -1,0 +1,35 @@
+.card {
+  background: var(--text-light);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.auth-card {
+  background: var(--text-light);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+button.secondary {
+  background: var(--duo-light);
+  border: 1px solid var(--duo-green);
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--duo-dark);
+  font-weight: 700;
+  transition: background 0.3s, transform 0.2s;
+  margin-top: 16px;
+}
+
+button.secondary:hover {
+  background: var(--duo-green);
+  color: var(--text-light);
+  transform: scale(1.05);
+}
+
+button.secondary:active {
+  transform: scale(0.95);
+}

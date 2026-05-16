@@ -50,6 +50,25 @@ export async function validateExercise(token: string, exerciseId: string, answer
   return handleResp(res)
 }
 
+export async function validateExerciseAudio(
+  token: string,
+  exerciseId: string,
+  payload: { word: string; expectedText: string; audio: File }
+) {
+  const form = new FormData()
+  form.append('word', payload.word)
+  form.append('expectedText', payload.expectedText)
+  form.append('audio', payload.audio)
+
+  const res = await fetch(`${API}/content/exercises/${exerciseId}/validate-audio`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form
+  })
+
+  return handleResp(res)
+}
+
 export async function getLessonLives(token: string, lessonId: string) {
   const res = await fetch(`${API}/content/lessons/${lessonId}/lives`, {
     method: 'GET',

@@ -7,7 +7,7 @@ import * as vocabularyClient from '../clients/vocabulary.client';
 import { gamificationClient } from '../utils/httpClient';
 import { createError } from '../utils/error.util';
 import { updateLessonProgress } from './progress.service';
-import { evaluatePronunciation } from '../utils/pronunciationClient';
+import { evaluatePronunciation, evaluatePronunciationAudio } from '../utils/pronunciationClient';
 import { getLives, loseLife, resetLives } from './lives.service';
 
 
@@ -99,6 +99,27 @@ export async function getLessonsByUnitWithLock(userId: string, unitId: string) {
   });
 }
 
+async function isUnitCompleted(userId: string, unitId: string) {
+  const [lessonRows] = await pool.execute<any[]>(
+    `SELECT COUNT(*) AS total FROM lessons WHERE unit_id = ?`,
+    [unitId]
+  );
+  const total = lessonRows[0]?.total ?? 0;
+  if (total === 0) return false;
+
+  const [progressRows] = await pool.execute<any[]>(
+    `SELECT COALESCE(SUM(completed), 0) AS completed
+     FROM lesson_progress
+     WHERE user_id = ? AND lesson_id IN (
+       SELECT id FROM lessons WHERE unit_id = ?
+     )`,
+    [userId, unitId]
+  );
+
+  const completed = progressRows[0]?.completed ?? 0;
+  return completed >= total;
+}
+
 export async function isLessonLocked(userId: string, lessonId: string) {
   // 1) Obtener la lección actual y su unit_id y order_index
   const [lessonRows] = await pool.execute<any[]>(
@@ -112,8 +133,29 @@ export async function isLessonLocked(userId: string, lessonId: string) {
 
   const lesson = lessonRows[0];
 
-  // 2) Si es la primera lección (order_index = 0) => no está locked
-  if (lesson.order_index === 0) return false;
+  // 2) Si es la primera leccion de la unidad, validar unidad previa
+  if (lesson.order_index === 0) {
+    const [unitRows] = await pool.execute<any[]>(
+      `SELECT id, created_at FROM units WHERE id = ? LIMIT 1`,
+      [lesson.unit_id]
+    );
+    const currentUnit = unitRows[0];
+    if (!currentUnit) return false;
+
+    const [prevUnitRows] = await pool.execute<any[]>(
+      `SELECT id FROM units
+       WHERE created_at < ?
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [currentUnit.created_at]
+    );
+
+    if (!prevUnitRows.length) return false;
+
+    const prevUnitId = prevUnitRows[0].id;
+    const prevCompleted = await isUnitCompleted(userId, prevUnitId);
+    return !prevCompleted;
+  }
 
   // 3) Buscar la lección anterior dentro de la misma unit
   const [prevRows] = await pool.execute<any[]>(
@@ -347,6 +389,128 @@ export async function validateExerciseAnswer(
   };
 }
 
+export async function validateExerciseAudio(
+  exerciseId: string,
+  input: {
+    audioBuffer: Buffer;
+    audioFilename: string;
+    audioMimeType: string;
+  },
+  userId: string,
+  token?: string
+): Promise<any> {
+  const [rows]: any = await pool.execute(
+    `SELECT correct_answer, lesson_id, type
+     FROM ${ExerciseTable}
+     WHERE id = ? LIMIT 1`,
+    [exerciseId]
+  );
+
+  if (!rows.length) {
+    throw createError('Exercise not found', 404);
+  }
+
+  const row = rows[0];
+  const expected = row.correct_answer;
+  const lessonId = row.lesson_id;
+  const type = row.type;
+
+  if (type !== 'PRONUNCIATION') {
+    throw createError('Exercise is not pronunciation', 400);
+  }
+
+  const existingAttempt = await getUserExerciseStatus(userId, exerciseId);
+  const isRepeat = Boolean(existingAttempt);
+
+  const pronunciationResult = await evaluatePronunciationAudio(
+    token,
+    userId,
+    {
+      word: expected,
+      expectedText: expected,
+      audioBuffer: input.audioBuffer,
+      audioFilename: input.audioFilename,
+      audioMimeType: input.audioMimeType
+    }
+  );
+
+  const score = pronunciationResult?.data?.score ?? 0;
+  const feedback = pronunciationResult?.data?.feedback ?? '';
+  const transcribedText = pronunciationResult?.data?.transcribedText ?? '';
+  const correct = pronunciationResult?.data?.isCorrect ?? score >= 70;
+
+  await pool.execute(
+    `INSERT INTO exercise_attempts (user_id, exercise_id, is_correct)
+     VALUES (?, ?, ?)`,
+    [userId, exerciseId, correct ? 1 : 0]
+  );
+
+  if (!correct && !isRepeat) {
+    const { lives } = await loseLife(userId, lessonId);
+
+    if (lives === 0) {
+      await pool.execute(
+        `DELETE FROM lesson_progress WHERE user_id = ? AND lesson_id = ?`,
+        [userId, lessonId]
+      );
+      await pool.execute(
+        `DELETE FROM user_exercises WHERE user_id = ? AND exercise_id IN (
+          SELECT id FROM exercises WHERE lesson_id = ?
+        )`,
+        [userId, lessonId]
+      );
+
+      return {
+        correct: false,
+        expected,
+        score,
+        feedback,
+        progress: { completed: false, progress: 0 },
+        lives: 0,
+        message: 'Out of lives. Lesson progress reset.',
+        transcribedText
+      };
+    }
+  }
+
+  if (correct && !isRepeat) {
+    await pool.execute(
+      `INSERT INTO user_exercises (user_id, exercise_id, is_correct)
+       VALUES (?, ?, ?)`,
+      [userId, exerciseId, 1]
+    );
+  }
+
+  let progress = null;
+  if (lessonId && !isRepeat) {
+    progress = await updateLessonProgress(userId, lessonId, correct);
+  }
+
+  if (correct && !isRepeat) {
+    try {
+      await gamificationClient.post('/api/v1/gamification/action', {
+        userId,
+        actionType: 'PRONUNCIATION_CORRECT'
+      });
+    } catch (error: any) {
+      console.error('Gamification error:', error?.message);
+    }
+  }
+
+  const { lives } = await getLives(userId, lessonId);
+
+  return {
+    correct,
+    expected,
+    score,
+    feedback,
+    progress,
+    lives,
+    repeat: isRepeat,
+    transcribedText
+  };
+}
+
 export async function completeLesson(userId: string) {
   try {
     await gamificationClient.post('/api/v1/gamification/action', {
@@ -427,12 +591,12 @@ export async function getLessonsWithProgress(userId: string, unitId: string) {
     }
 
     // 🎯 status final
-    let status: 'locked' | 'unlocked' | 'completed';
+    let status: 'locked' | 'available' | 'completed';
 
     if (isCompleted) {
       status = 'completed';
     } else if (unlocked) {
-      status = 'unlocked';
+      status = 'available';
     } else {
       status = 'locked';
     }
@@ -459,14 +623,27 @@ export async function getUnitsWithProgress(userId: string) {
   );
 
   const result = [];
+  let prevUnitCompleted = true;
 
   for (const unit of units) {
     const lessons = await getLessonsWithProgress(userId, unit.id);
+    let finalLessons = lessons;
+
+    if (!prevUnitCompleted) {
+      finalLessons = lessons.map((lesson: any) => {
+        if (lesson.status === 'completed') return lesson;
+        return { ...lesson, status: 'locked' };
+      });
+    }
+
+    // calcular si esta unidad esta completada (para desbloquear la siguiente)
+    const unitCompleted = await isUnitCompleted(userId, unit.id);
+    prevUnitCompleted = unitCompleted;
 
     result.push({
       unitId: unit.id,
       title: unit.title,
-      lessons
+      lessons: finalLessons
     });
   }
 

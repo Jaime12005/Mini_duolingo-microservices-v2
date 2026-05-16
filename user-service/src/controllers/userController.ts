@@ -104,3 +104,14 @@ export async function getStreak(req: RequestWithUser, res: Response, next: NextF
     next(err);
   }
 }
+
+export async function changePassword(req: RequestWithUser, res: Response, next: NextFunction) {
+  try {
+    const userId = req.userId!;
+    const { currentPassword, newPassword } = req.body;
+    await userService.changePassword(userId, currentPassword, newPassword);
+    res.json({ success: true, message: 'Password updated', data: null, error: null });
+  } catch (err) {
+    next(err);
+  }
+}

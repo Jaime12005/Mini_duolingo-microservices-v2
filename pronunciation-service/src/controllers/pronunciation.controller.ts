@@ -5,6 +5,8 @@ import AppError from '../utils/AppError';
 import fs from 'fs';
 import OpenAI from 'openai';
 import { sendUserAction } from '../utils/gamificationClient';
+import { toFile } from 'openai/uploads';
+import path from 'path';
 
 
 const openai = new OpenAI({
@@ -21,24 +23,39 @@ export const evaluateAudio = async (req: any, res: any, next: any) => {
       return next(new AppError('Unauthorized', 401));
     }
 
-    const { word, expectedText } = req.body;
-
-    if (!word || !expectedText) {
-      return next(new AppError('word and expectedText are required', 400));
+    const parsed = evaluateAudioSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return next(new AppError(parsed.error.issues[0].message, 400));
     }
+    const { word, expectedText } = parsed.data;
 
     if (!req.file) {
       return next(new AppError('Audio file is required', 400));
     }
 
+    console.log('file info:', {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size
+    });
+    
+
     const audioPath = req.file.path;
 
     try {
+      
+      const audioFile = await toFile(
+        fs.createReadStream(req.file.path),
+        req.file.originalname,
+        { type: req.file.mimetype }
+      );
+      
       const transcription = await openai.audio.transcriptions.create({
-        file: fs.createReadStream(req.file.path),
+        file: audioFile,
         model: 'whisper-1'
       });
-
+      
+      console.log('transcription:', transcription.text);
       transcribedText = transcription.text;
     } catch (error: any) {
       console.error('Whisper error, using fallback:', error?.message || error);
