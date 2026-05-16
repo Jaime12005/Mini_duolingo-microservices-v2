@@ -90,6 +90,49 @@ export async function validateExercise(req: Request, res: Response, next: NextFu
   } catch (err) { next(err); }
 }
 
+export async function validateExerciseAudio(req: any, res: Response, next: NextFunction) {
+  try {
+    const { exerciseId } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+        data: null,
+        error: 'Missing user'
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Audio file is required',
+        data: null,
+        error: 'Validation'
+      });
+    }
+
+    const token = req.headers.authorization?.split(' ')[1];
+
+    const result = await contentService.validateExerciseAudio(
+      exerciseId,
+      {
+        audioBuffer: req.file.buffer,
+        audioFilename: req.file.originalname,
+        audioMimeType: req.file.mimetype
+      },
+      userId,
+      token
+    );
+
+    res.json({ success: true, message: 'OK', data: result, error: null });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
 export async function completeLesson(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = req.user?.userId;

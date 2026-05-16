@@ -1,7 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import * as authService from '../services/auth'
 
-type User = { username: string; email: string } | null
+type User = {
+  userId: string;
+  username: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string | null;
+} | null;
 
 const AuthContext = createContext<any>(null)
 
@@ -12,10 +18,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // try to refresh on load
     let mounted = true
-    authService.refresh().then(data => {
+    authService.refresh().then(async data => {
       if (!mounted) return
       setAccessToken(data.accessToken)
-      if (data.user) setUser(data.user)
+      try {
+        const me = await authService.getProfile(data.accessToken)
+        setUser({
+          userId: me.user.user_id,
+          username: me.user.username,
+          email: me.user.email,
+          displayName: me.profile?.display_name || me.user.username,
+          avatarUrl: me.profile?.avatar_url || null
+        })
+      } catch {
+        setUser(null)
+      }
     }).catch(() => {})
     return () => { mounted = false }
   }, [])
@@ -32,7 +49,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (emailOrUsername: string, password: string) => {
     const data = await authService.login(emailOrUsername, password)
     setAccessToken(data.accessToken)
-    if (data.user) setUser(data.user)
+
+    const me = await authService.getProfile(data.accessToken)
+    setUser({
+      userId: me.user.user_id,
+      username: me.user.username,
+      email: me.user.email,
+      displayName: me.profile?.display_name || me.user.username,
+      avatarUrl: me.profile?.avatar_url || null
+    })
+
     return data
   }
 

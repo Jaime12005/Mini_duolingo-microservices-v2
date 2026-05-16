@@ -1,0 +1,31 @@
+.auth-card {
+  max-width: 420px;
+  margin: 12px auto;
+}
+.card {
+  background: var(--text-light);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.auth-card {
+  background: var(--text-light);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+button.primary {
+  background: var(--duo-green);
+  color: var(--text-light);
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button.primary:hover {
+  background: #45a700;
+}

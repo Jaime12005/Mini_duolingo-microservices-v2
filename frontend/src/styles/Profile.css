@@ -1,0 +1,42 @@
+.profile-card {
+  max-width: 640px;
+  margin: 12px auto;
+}
+
+.profile-card {
+  background: var(--text-light);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.profile-stats {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.profile-achievements {
+  margin-top: 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.profile-achievements-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.profile-achievement-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: pop-in 0.5s ease-in-out;
+  gap: 4px;
+}
+
+.profile-achievement-item img {
+  width: 64px;
+  height: 64px;
+}

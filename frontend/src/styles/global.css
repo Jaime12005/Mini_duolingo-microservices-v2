@@ -1,0 +1,192 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+:root {
+  --duo-green: #58cc02;
+  --duo-dark: #2a7a2a;
+  --duo-light: #dfffd6;
+  --bg: #eaf7e9;
+  --text-dark: #333;
+  --text-light: #fff;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: 'Nunito', sans-serif;
+}
+
+.hero {
+  background: linear-gradient(90deg, #9de37a, var(--duo-green));
+  color: var(--text-light);
+  padding: 5vw; /* Basado en el ancho de la ventana */
+  border-radius: 12px;
+  font-size: 1rem; /* Relativo al tamaño base */
+  text-align: center;
+}
+
+body {
+  background: linear-gradient(180deg, var(--bg) 0%, #f8fff8 100%);
+  margin: 0;
+  color: var(--text-dark);
+  font-size: 16px;
+}
+
+input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #e6efe6;
+  border-radius: 8px;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--duo-green);
+  box-shadow: 0 0 4px var(--duo-green);
+}
+
+button {
+  font-size: 1.2rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+/* Botones */
+button.danger {
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button.danger:hover {
+  background: #d9363e;
+}
+
+/* Animaciones */
+@keyframes lessonIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes livesShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.6); opacity: 0.6; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Media Queries */
+@media (min-width: 768px) {
+  .container {
+    max-width: 90%;
+    padding: 16px;
+  }
+
+  .hero {
+    padding: 24px;
+    font-size: 1.2rem;
+  }
+
+  .lessons-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  .duo-header {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  html {
+    font-size: 17px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 980px;
+  }
+
+  html {
+    font-size: 18px;
+  }
+
+  .hero {
+    padding: 32px;
+    font-size: 1.5rem;
+  }
+
+  .lessons-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+/* Otros */
+.recording-wave {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.recording-wave span {
+  width: 4px;
+  height: 16px;
+  background: #58cc02;
+  border-radius: 999px;
+  animation: wave 0.8s ease-in-out infinite;
+}
+
+.recording-wave span:nth-child(2) { animation-delay: 0.1s; height: 20px; }
+.recording-wave span:nth-child(3) { animation-delay: 0.2s; height: 14px; }
+.recording-wave span:nth-child(4) { animation-delay: 0.3s; height: 22px; }
+
+.lesson-card:hover {
+  transform: scale(1.05);
+}
+
+.lesson-card:active {
+  transform: scale(0.95);
+}
+
+.unit-stack {
+  display: grid;
+  gap: 16px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}

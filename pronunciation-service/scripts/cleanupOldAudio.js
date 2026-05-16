@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const RETENTION_DAYS = 3;
+const RETENTION_DAYS = 1;
 
 function resolvePath(p) {
   if (!p) return null;

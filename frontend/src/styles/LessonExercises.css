@@ -1,0 +1,139 @@
+.exercise-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.exercise-progress {
+  flex: 1;
+  height: 10px;
+  background: #e6efe6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.exercise-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #8fe14b, #58cc02);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.lesson-icon.unlocked {
+  background: #dfffd6;
+}
+
+.lesson-icon.locked {
+  background: #f1f1f1;
+}
+
+.lesson-lives {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  animation: livesShake 0.4s ease;
+}
+
+.lesson-lives-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.lesson-lives-timer {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: #5a6a75;
+}
+
+.exercise-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.heart {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.heart.empty {
+  opacity: 0.35;
+}
+
+.exercise-card {
+  border: 2px solid #e6efe6;
+  border-radius: 12px;
+  padding: 14px;
+  background: #ffffff;
+}
+
+.exercise-meta {
+  margin-bottom: 8px;
+}
+
+.exercise-type {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2a7a2a;
+  background: #eaf7e9;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.exercise-prompt {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.exercise-input {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.exercise-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.exercise-result {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: #f8fff8;
+  border-radius: 10px;
+  border: 1px dashed #cfe7c8;
+  display: grid;
+  gap: 6px;
+}
+
+.result-good {
+  color: #2a7a2a;
+  font-weight: 700;
+}
+
+.result-bad {
+  color: #b23a2f;
+  font-weight: 700;
+}
+
+.result-detail {
+  font-size: 12px;
+  color: #2a7a2a;
+}
+
+.result-feedback {
+  font-size: 12px;
+  color: #444;
+}
+
+.empty-state {
+  font-size: 13px;
+  color: #666;
+  padding: 8px 0;
+}

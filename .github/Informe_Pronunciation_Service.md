@@ -16,7 +16,8 @@ CREATE TABLE evaluations (
   transcribedText TEXT NOT NULL,
   score INT NOT NULL,
   feedback TEXT,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  audioPath varchar(255) DEFAULT NULL
 );
 
 
