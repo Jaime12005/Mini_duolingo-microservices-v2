@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
 
+
 const windowMs = 15 * 60 * 1000; // 15 minutes
 const maxRequests = 100; // limit per IP
 

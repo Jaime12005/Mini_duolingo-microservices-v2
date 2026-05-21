@@ -8,14 +8,16 @@ import { errorMiddleware } from './middlewares/error.middleware';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { loggerMiddleware } from './middlewares/logger.middleware';
 import config from './config/env';
-import dotenv from 'dotenv';
+//import dotenv from 'dotenv';
 
-dotenv.config();
+//dotenv.config();
 
 const app: Application = express();
 
 app.use(helmet() as any);
-const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+//const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';}
+const allowedOrigin = config.FRONTEND_ORIGIN || 'http://localhost:5173';
+console.log('[api-gateway] FRONTEND_ORIGIN:', allowedOrigin);
 app.use(
   cors({
     origin: allowedOrigin,
