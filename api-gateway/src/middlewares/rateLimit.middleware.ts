@@ -1,4 +1,4 @@
-import rateLimit, { Options } from 'express-rate-limit';
+import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
 
 const windowMs = 15 * 60 * 1000; // 15 minutes
@@ -6,7 +6,7 @@ const maxRequests = 100; // limit per IP
 
 const options: Options = {
   windowMs,
-  max: maxRequests,
+  limit: maxRequests,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req: Request, res: Response) => {
