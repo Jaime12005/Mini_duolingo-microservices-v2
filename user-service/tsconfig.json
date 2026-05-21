@@ -11,5 +11,6 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "types": ["node", "express", "jest"]
-  }
+  },
+  "exclude": ["tests", "**/*.test.ts"]
 }
